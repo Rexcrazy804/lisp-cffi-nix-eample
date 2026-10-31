@@ -1,9 +1,12 @@
 {
+  lib,
   sbcl,
-  mkShell,
+  mkShellNoCC,
   xterm,
+  curl,
+  pkg-config,
 }:
-mkShell {
+mkShellNoCC rec {
   name = "lisp-dev";
   packages = [
     xterm # too lazy to bother editing swank
@@ -11,6 +14,13 @@ mkShell {
       with p; [
         swank
         harmony
+        cffi
       ]))
   ];
+
+  buildInputs = [
+    curl
+  ];
+
+  LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
 }

@@ -16,14 +16,20 @@ sbcl.buildASDFSystem {
     writeText "build.lisp"
     # lisp
     ''
-      ;; Load ASDF
-      (load (concatenate 'string (sb-ext:posix-getenv "asdfFasl") "/asdf.fasl"))
-      (defpackage :nix.build-script (:use :cl :asdf))
-      (in-package :nix.build-script)
+      (in-package :cl-user)
+      (load "@asdf@")
 
-      ;; Load asdf systems
-      (initialize-output-translations '(:output-translations :disable-cache :inherit-configuration))
-      (mapcar #'load-system (uiop:split-string (sb-ext:posix-getenv "systems")))
+      (defun load-systems ()
+        (handler-case
+            (let ((systems (uiop:getenv "systems")))
+              (dolist (s (uiop:split-string systems :separator " "))
+                (asdf:load-system s)))
+          (error (c)
+            (format t "BUILD FAILED: ~A~%" c)
+            (uiop:quit 1)))
+        (uiop:quit 0))
+
+      (load-systems)
 
       ;; Load project asdf
       (load "audio.asd")
