@@ -19,7 +19,9 @@
     });
 
     devShells = eachSystem (system: {
-      lisp = pkgsOf.${system}.callPackage ./nix/shell.nix {};
+      lisp = pkgsOf.${system}.callPackage ./nix/shell.nix {
+        c-lib = self.packages.${system}.simple-lib;
+      };
       c = pkgsOf.${system}.callPackage ./nix/shell-c.nix {};
       default = self.devShells.${system}.lisp;
     });
