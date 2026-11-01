@@ -13,6 +13,19 @@
   (num1 :int)
   (num2 :int))
 
+(defcenum :operator
+          (:op-add 1)
+          (:op-subtract 2)
+          (:op-multiply 3)
+          (:op-divide 4))
+
+(defcfun ("operate_numbers" operate-numbers) :int
+  (num1 :int)
+  (num2 :int)
+  (op :operator))
+
 (defun main ()
-  (let ((result (add-two-nums 1 2)))
-    (format t "Result: ~a~%" result)))
+  (let ((result (add-two-nums 1 2))
+        (result/op (operate-numbers 10 2 :op-divide)))
+    (format t "Result: ~a~%" result)  
+    (format t "Result/OP: ~a~%" result/op)))
