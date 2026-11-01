@@ -13,11 +13,15 @@
     eachSystem = genAttrs systems;
   in {
     packages = eachSystem (system: {
-      default = pkgsOf.${system}.callPackage ./nix/package.nix {};
+      default = self.packages.${system}.audio;
+      audio = pkgsOf.${system}.callPackage ./nix/package.nix {};
+      simple-lib = pkgsOf.${system}.callPackage ./nix/library.nix {};
     });
 
     devShells = eachSystem (system: {
-      default = pkgsOf.${system}.callPackage ./nix/shell.nix {};
+      lisp = pkgsOf.${system}.callPackage ./nix/shell.nix {};
+      c = pkgsOf.${system}.callPackage ./nix/shell-c.nix {};
+      default = self.devShells.${system}.lisp;
     });
   };
 }
