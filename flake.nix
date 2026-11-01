@@ -12,9 +12,13 @@
     pkgsOf = nixpkgs.legacyPackages;
     eachSystem = genAttrs systems;
   in {
-    packages = eachSystem (system: {
-      default = self.packages.${system}.audio;
-      audio = pkgsOf.${system}.callPackage ./nix/package.nix {};
+    packages = eachSystem (system: let 
+      self' = self.packages.${system};
+    in {
+      default = self'.audio;
+      audio = pkgsOf.${system}.callPackage ./nix/package.nix {
+        inherit (self') simple-lib;
+      };
       simple-lib = pkgsOf.${system}.callPackage ./nix/library.nix {};
     });
 

@@ -3,6 +3,7 @@
   sbcl,
   writeText,
   makeWrapper,
+  simple-lib,
 }:
 sbcl.buildASDFSystem {
   pname = "audio";
@@ -18,7 +19,11 @@ sbcl.buildASDFSystem {
       ];
     };
 
-  nativeLibs = [makeWrapper];
+  lispLibs = with sbcl.pkgs; [
+    cffi
+  ];
+
+  nativeLibs = [makeWrapper simple-lib];
 
   systems = ["audio"];
 
