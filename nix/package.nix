@@ -1,4 +1,5 @@
 {
+  lib,
   sbcl,
   writeText,
   makeWrapper,
@@ -6,7 +7,16 @@
 sbcl.buildASDFSystem {
   pname = "audio";
   version = "0.1.0";
-  src = ../.;
+  src = let
+    inherit (lib.fileset) unions toSource;
+  in
+    toSource {
+      root = ../.;
+      fileset = unions [
+        ../src
+        ../audio.asd
+      ];
+    };
 
   nativeLibs = [makeWrapper];
 
