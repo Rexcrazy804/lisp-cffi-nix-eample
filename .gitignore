@@ -1,4 +1,7 @@
 data/
+build/
+
 *.fasl
+.envrc
 
 result*
