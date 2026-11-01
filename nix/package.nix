@@ -4,6 +4,7 @@
   writeText,
   makeWrapper,
   simple-lib,
+  libffi,
 }:
 sbcl.buildASDFSystem {
   pname = "audio";
@@ -21,9 +22,10 @@ sbcl.buildASDFSystem {
 
   lispLibs = with sbcl.pkgs; [
     cffi
+    cffi-libffi
   ];
 
-  nativeLibs = [makeWrapper simple-lib];
+  nativeLibs = [makeWrapper simple-lib libffi];
 
   systems = ["audio"];
 
@@ -54,6 +56,13 @@ sbcl.buildASDFSystem {
 
     mkdir -p $out/bin
     install -Dm777 audio $out/bin
+
+    # sometimes nativeLibs isn't sufficient
+    # in this case libadder.so from simple-lib doesn't need this
+    # but libffi does.
+    # life do be funny like this
+    wrapProgram $out/bin/audio \
+      --prefix LD_LIBRARY_PATH : "$LD_LIBRARY_PATH"
 
     runHook postInstall
   '';
