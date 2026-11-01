@@ -13,6 +13,7 @@ mkShell rec {
       with p; [
         swank
         cffi
+        cffi-libffi
       ]))
   ];
 
