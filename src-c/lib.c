@@ -14,3 +14,5 @@ int operate_numbers(int num1, int num2, operator opt) {
     return num1 / num2;
   }
 }
+
+int operate_atom(atom at) { return operate_numbers(at.num1, at.num2, at.op); }

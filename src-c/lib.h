@@ -10,6 +10,12 @@ typedef enum {
   OP_DIVIDE = 4,
 } operator;
 
+typedef struct {
+  int num1;
+  int num2;
+  operator op;
+} atom;
+
 /// FUNCTIONS
 
 // Adds two numbers
@@ -17,5 +23,7 @@ int add_two_numbers(int, int);
 
 // Performs an operation on the given numbers
 int operate_numbers(int, int, operator);
+
+int operate_atom(atom);
 
 #endif
