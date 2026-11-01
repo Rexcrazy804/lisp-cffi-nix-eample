@@ -25,7 +25,6 @@ library (
   'adder',
   lib_sources,
   dependencies : dependencies,
-  install_vala_header : true,
   install : true,
 )
 
