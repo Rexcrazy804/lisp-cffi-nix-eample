@@ -33,17 +33,28 @@
 (defcfun ("operate_atom" operate-atom) :int
   (op-atom (:struct x-atom)))
 
-(defun main ()
-  (let ((result (add-two-nums 1 2))
-        (result/op (operate-numbers 10 2 :op-divide))
-        (result/op-a 
-          ; a little janky will cleanup later
-          (with-foreign-object (obj 'x-atom)
-            (setf (foreign-slot-value obj 'x-atom 'num1) 2
-                  (foreign-slot-value obj 'x-atom 'num2) 8
-                  (foreign-slot-value obj 'x-atom 'op ) :op-add)
-            (operate-atom (cffi:mem-ref obj `(:struct x-atom))))))
-    (format t "Result: ~a~%" result)  
-    (format t "Result/OP: ~a~%" result/op)  
-    (format t "Result/OP-A: ~a~%" result/op-a)))
+(defcfun ("operate_atom_ref" operate-atom-ref) :int
+  (op-atom (:pointer (:struct x-atom))))
 
+(defun new-x-atom (num1 num2 operator)
+  "creates new atom and returns its pointer"
+  (let ((obj (foreign-alloc `(:struct x-atom))))
+    (setf (foreign-slot-value obj `(:struct x-atom) 'num1) num1
+          (foreign-slot-value obj `(:struct x-atom) 'num2) num2
+          (foreign-slot-value obj `(:struct x-atom) 'op) operator)
+    obj))
+
+
+(defun main ()
+  (let* ((result (add-two-nums 1 2))
+         (result/op (operate-numbers 10 2 :op-divide))
+         (atom1 (new-x-atom 4 2 :op-multiply))
+         (atom2 (new-x-atom 3 2 :op-subtract)))
+    (unwind-protect ; I may or may not have lost two pointers somewhere
+      (progn 
+        (format t "Result: ~a~%" result)  
+        (format t "Result/OP: ~a~%" result/op)  
+        (format t "Result/OP-A: ~a~%" (operate-atom (mem-ref atom1 `(:struct x-atom))))
+        (format t "Result/OP-AR: ~a~%" (operate-atom-ref atom2)))
+      (foreign-free atom1)
+      (foreign-free atom2))))
