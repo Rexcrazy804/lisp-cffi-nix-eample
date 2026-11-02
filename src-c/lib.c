@@ -18,3 +18,7 @@ int operate_numbers(int num1, int num2, operator opt) {
 }
 
 int operate_atom(atom at) { return operate_numbers(at.num1, at.num2, at.op); }
+
+int operate_atom_ref(atom *at) {
+  return operate_numbers(at->num1, at->num2, at->op);
+}

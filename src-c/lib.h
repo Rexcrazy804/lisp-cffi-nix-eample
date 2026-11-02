@@ -24,6 +24,10 @@ int add_two_numbers(int, int);
 // Performs an operation on the given numbers
 int operate_numbers(int, int, operator);
 
+// Processes an atom
 int operate_atom(atom);
+
+// Processes a reference to an atom
+int operate_atom_ref(atom*);
 
 #endif
