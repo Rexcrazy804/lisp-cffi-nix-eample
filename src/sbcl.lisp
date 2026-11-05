@@ -54,7 +54,7 @@
 ; This is beautiful and cohesive.
 ; Like programming was meant to be.
 
-(defvar *my-atom* (make-alien (struct c-atom)))
+(defparameter *my-atom* (make-alien (struct c-atom)))
 
 (setf (slot *my-atom* 'num1) 2
       (slot *my-atom* 'num2) 2
