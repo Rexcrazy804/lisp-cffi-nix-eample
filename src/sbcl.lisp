@@ -53,3 +53,15 @@
 
 ; This is beautiful and cohesive.
 ; Like programming was meant to be.
+
+(defvar *my-atom* (make-alien (struct c-atom)))
+
+(setf (slot *my-atom* 'num1) 2
+      (slot *my-atom* 'num2) 2
+      (slot *my-atom* 'op) :op-add)
+
+(operate-atom-ref *my-atom*)
+
+(free-alien *my-atom*)
+
+; Don't forget to use after free!
