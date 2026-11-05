@@ -32,3 +32,5 @@ atom new_atom(int n1, int n2, operator op) {
 
   return obj;
 }
+
+void atom_set_operator(atom *obj, operator op) { obj->op = op; }

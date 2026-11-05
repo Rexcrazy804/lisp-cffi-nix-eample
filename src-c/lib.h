@@ -33,4 +33,7 @@ int operate_atom_ref(atom*);
 // Creates an atom
 atom new_atom(int, int, operator);
 
+// Updates the operator of the atom
+void atom_set_operator(atom*, operator);
+
 #endif
