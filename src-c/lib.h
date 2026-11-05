@@ -30,4 +30,7 @@ int operate_atom(atom);
 // Processes a reference to an atom
 int operate_atom_ref(atom*);
 
+// Creates an atom
+atom new_atom(int, int, operator);
+
 #endif

@@ -22,3 +22,13 @@ int operate_atom(atom at) { return operate_numbers(at.num1, at.num2, at.op); }
 int operate_atom_ref(atom *at) {
   return operate_numbers(at->num1, at->num2, at->op);
 }
+
+atom new_atom(int n1, int n2, operator op) {
+  atom obj = {
+      .num1 = n1,
+      .num2 = n2,
+      .op = op,
+  };
+
+  return obj;
+}
