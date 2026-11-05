@@ -65,3 +65,26 @@
 (free-alien *my-atom*)
 
 ; Don't forget to use after free!
+
+(define-alien-routine new_atom (struct c-atom)
+                      (num1 int :in)
+                      (num2 int :in)
+                      (operator (enum operator) :in))
+
+(define-alien-routine ("atom_set_operator" atom-set-operator) void
+                      (c-atom (* (struct c-atom)))
+                      (op (enum operator)))
+
+(defparameter *my-test* (new_atom 1 2 :op-divide)) ; Here lisp receives an alien and not a system area pointer (SAP) that you typically get from make-alien
+
+(slot *my-test* 'op)
+
+(atom-set-operator (alien-sap *my-test*) :op-multiply)
+
+(operate-atom *my-test*)
+
+(atom-set-operator (alien-sap *my-test*) :op-add)
+
+(operate-atom-ref (alien-sap *my-test*))
+
+(free-alien *my-atom*)
