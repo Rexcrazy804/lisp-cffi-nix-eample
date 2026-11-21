@@ -4,6 +4,7 @@
   mkShell,
   xterm,
   c-lib,
+  raylib,
 }:
 mkShell rec {
   name = "lisp-dev";
@@ -17,7 +18,7 @@ mkShell rec {
       ]))
   ];
 
-  buildInputs = [c-lib];
+  buildInputs = [c-lib raylib];
 
   LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
 }
