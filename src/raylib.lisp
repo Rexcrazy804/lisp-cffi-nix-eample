@@ -18,6 +18,13 @@
                            (x float)
                            (y float))) 
 
+(define-alien-type nil
+                   (struct rectangle
+                           (x float)
+                           (y float)   
+                           (width float)
+                           (height float)))
+
 (define-alien-type nil 
                    (enum keyboardkey
                          (:key-null 0) ; key: null, used for no key pressed
@@ -164,7 +171,10 @@
 (define-alien-routine ("DrawCircleV" draw-circle) void
                       (center (struct vector2))
                       (radius float)
-                      (color (struct color)))
+
+(define-alien-routine ("DrawRectangleRec" draw-rectangle) void
+                      (rect (struct rectangle))
+                      (color (struct color))))
 
 (define-alien-routine ("ClearBackground" clear-bg) void
                       (color (struct color)))
@@ -172,6 +182,13 @@
 (define-alien-routine ("DrawFPS" draw-fps) void
                       (posx int)
                       (posy int))
+
+;; Collision Detection
+
+(define-alien-routine ("CheckCollisionCircleRec" collisionp-circle-rec) boolean
+                      (center (struct vector2))
+                      (radius float)
+                      (rec (struct rectangle)))
 
 ;; Utility functions
 (defun make-color (r g b &optional (a #xFF))
@@ -192,7 +209,15 @@
 (defgeneric draw (object)
   (:documentation "draws a an object in raylib"))
 
-(defgeneric update (object)
+;; note: ideally I prefer the ECS approach
+;; we will have ome sort of global hash map that maps a "tag" to a list
+;; when an object let say which is a decended of the entity class is created
+;; it will be added to a global variable *entities* based on it's :tag slot
+;; and then update function can use this map to pick the desired colliders
+;; ofc entity would be something like (defclass entity () (tag alive))
+;; where tag is "tag" and alive decides whether it gets "update"ed or "draw"n
+;; For the sake of keeping this fairly simple I will not be doing that
+(defgeneric update (object &rest coliders)
   (:documentation "updates an object"))
 
 (defgeneric cleanup (object)
@@ -217,40 +242,89 @@
                    (radius :radius)) object
     (draw-circle (deref center) radius (deref color))))
 
-(defmethod update ((object circle))
+(defmethod update ((object circle) &rest coliders)
   (let* ((speed 400.0)
          (delta (get-delta))
          (effective-speed (* delta speed))
-         (center (:center object)))
+         (center (:center object))
+         (original (list (slot center 'x) (slot center 'y))))
     (when (key-pressedp :key-j) (decf (slot center 'y) effective-speed))
     (when (key-pressedp :key-k) (incf (slot center 'y) effective-speed)) 
     (when (key-pressedp :key-h) (incf (slot center 'x) effective-speed)) 
-    (when (key-pressedp :key-l) (decf (slot center 'x) effective-speed))))
+    (when (key-pressedp :key-l) (decf (slot center 'x) effective-speed))
+    (flet ((reset ()
+             (setf (slot center 'x) (first original))
+             (setf (slot center 'y) (second original))))
+      (dolist (c coliders)
+        (cond
+          ((typep c 'rectangle)
+           ; (format #.*standard-output* "c~%")
+           (when (collisionp-circle-rec (deref (:center object))
+                                        (:radius object)
+                                        (deref (slot-value c 'rect)))
+             (reset)))
+          (t nil))))))
 
 (defmethod cleanup ((object circle))
   (free-alien (:center object))
   (free-alien (:color object)))
+
+;; Rectangle
+
+(defclass rectangle ()
+  ((rect
+     :type `(alien (* (struct rectangle)))
+     :initarg :rect)
+   (color
+     :initform (make-color #xff #x00 #xff)
+     :initarg :color
+     :accessor :color))
+  (:documentation "wrapper class for rectangle structure"))
+
+(defmethod draw ((object rectangle))
+  (draw-rectangle (deref (slot-value object 'rect))
+                  (deref (:color object))))
+
+(defmethod cleanup ((object rectangle))
+  (free-alien (slot-value object 'rect))
+  (free-alien (:color object)))
+
+(defun make-rectangle (x y h w &optional color)
+  "creates a rectangle at x y with height h and width w"
+  (declare (type (or null (alien (* (struct color)))) color))
+  (let ((rect (make-alien (struct rectangle))))
+    (setf (slot rect 'x) x)
+    (setf (slot rect 'y) y)
+    (setf (slot rect 'height) h)
+    (setf (slot rect 'width) w)
+    (if color
+        (make-instance 'rectangle :rect rect :color color)  
+        (make-instance 'rectangle :rect rect))
+    ))
 
 ;; Working Area
 (defun main () 
   (init-window 400 400 "hello world")
   (set-target-fps 60)
   (let ((bg-color (make-color #x00 #x00 #x00)) 
-        (player (make-instance 'circle)))
+        (player (make-instance 'circle))
+        (rect (make-rectangle 40.0 40.0 20.0 20.0)))
     (unwind-protect 
       (loop
         :when (window-should-close) :do (return)
         :do
         ;; game loop
-        (update player)
+        (update player rect)
         ;; update window
         (clear-bg (deref bg-color))
         (begin-drawing)
+        (draw rect)
         (draw player)
         (draw-fps 0 0)
         (end-drawing))
       (free-alien bg-color)
       (cleanup player)
+      (cleanup rect)
       (close-window))))
 
 (make-thread #'main :name "primary-game-thread")
