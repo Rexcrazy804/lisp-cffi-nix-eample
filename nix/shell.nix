@@ -18,7 +18,10 @@ mkShell rec {
       ]))
   ];
 
-  buildInputs = [c-lib raylib];
+  buildInputs = [
+    c-lib 
+    raylib
+  ];
 
   LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
 }
