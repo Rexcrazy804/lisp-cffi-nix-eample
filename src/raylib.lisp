@@ -13,6 +13,11 @@
                            (b unsigned-char)
                            (a unsigned-char)))
 
+(define-alien-type nil
+                   (struct vector2
+                           (x float)
+                           (y float))) 
+
 (define-alien-type nil 
                    (enum keyboardkey
                          (:key-null 0) ; key: null, used for no key pressed
@@ -131,8 +136,6 @@
                          (:key-volume-down 25) ; key: android volume down button
                          ))
 
-
-
 ;; Window
 (define-alien-routine ("InitWindow" init-window) void
                       (width int)
@@ -148,6 +151,8 @@
 
 (define-alien-routine ("GetFPS" get-fps) int)
 
+(define-alien-routine ("GetFrameTime" get-delta) float)
+
 ;; Input
 (define-alien-routine ("IsKeyPressed" key-pressedp) boolean
                       (key (enum keyboardkey)))
@@ -156,9 +161,8 @@
 (define-alien-routine ("BeginDrawing" begin-drawing) void)
 (define-alien-routine ("EndDrawing" end-drawing) void)
 
-(define-alien-routine ("DrawCircle" draw-circle) void
-                      (center-x int)
-                      (center-y int)
+(define-alien-routine ("DrawCircleV" draw-circle) void
+                      (center (struct vector2))
                       (radius float)
                       (color (struct color)))
 
@@ -178,50 +182,61 @@
     (setf (slot color 'a) a)
     color))
 
-;; Player class
+(defun make-vector (x y)
+  (let ((vec (make-alien (struct vector2))))
+    (setf (slot vec 'x) x)
+    (setf (slot vec 'y) y)
+    vec))
 
-(defclass player ()
-  ((x 
-     :type number
-     :initarg :x
-     :initform 0
-     :accessor :x
-     :documentation "x coordinate of the player")
-   (y 
-     :type number
-     :initarg :y
-     :initform 0
-     :accessor :y
-     :documentation "y coordinate of the player")
-   (color
-     :initform (make-color #xff #x00 #xff)
-     :accessor :color)))
-
+;; Generics
 (defgeneric draw (object)
   (:documentation "draws a an object in raylib"))
-
-(defmethod draw ((object player))
-  (with-accessors ((x :x)
-                   (y :y)
-                   (color :color)) object
-    (draw-circle x y 50.0 (deref color))))
 
 (defgeneric update (object)
   (:documentation "updates an object"))
 
-(defmethod update ((object player))
-  (let ((speed 5))
-    (when (key-pressedp :key-j) (decf (:y object) speed))
-    (when (key-pressedp :key-k) (incf (:y object) speed)) 
-    (when (key-pressedp :key-h) (incf (:x object) speed)) 
-    (when (key-pressedp :key-l) (decf (:x object) speed))))
+(defgeneric cleanup (object)
+  (:documentation "frees allocated slots of the object"))
+
+;; Circle class
+(defclass circle ()
+  ((center
+     :accessor :center
+     :initform (make-vector 100.0 100.0)
+     :documentation "stores the coordinates of the center of the circle")
+   (radius 
+     :accessor :radius
+     :initform 50.0)
+   (color
+     :initform (make-color #xff #x00 #xff)
+     :accessor :color)))
+
+(defmethod draw ((object circle))
+  (with-accessors ((center :center)
+                   (color :color)
+                   (radius :radius)) object
+    (draw-circle (deref center) radius (deref color))))
+
+(defmethod update ((object circle))
+  (let* ((speed 400.0)
+         (delta (get-delta))
+         (effective-speed (* delta speed))
+         (center (:center object)))
+    (when (key-pressedp :key-j) (decf (slot center 'y) effective-speed))
+    (when (key-pressedp :key-k) (incf (slot center 'y) effective-speed)) 
+    (when (key-pressedp :key-h) (incf (slot center 'x) effective-speed)) 
+    (when (key-pressedp :key-l) (decf (slot center 'x) effective-speed))))
+
+(defmethod cleanup ((object circle))
+  (free-alien (:center object))
+  (free-alien (:color object)))
 
 ;; Working Area
 (defun main () 
   (init-window 400 400 "hello world")
   (set-target-fps 60)
   (let ((bg-color (make-color #x00 #x00 #x00)) 
-        (player (make-instance 'player :x 100 :y 100)))
+        (player (make-instance 'circle)))
     (unwind-protect 
       (loop
         :when (window-should-close) :do (return)
@@ -234,9 +249,8 @@
         (draw player)
         (draw-fps 0 0)
         (end-drawing))
-
       (free-alien bg-color)
-      (free-alien (:color player))
+      (cleanup player)
       (close-window))))
 
 (make-thread #'main :name "primary-game-thread")
