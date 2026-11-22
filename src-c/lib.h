@@ -21,6 +21,13 @@ typedef struct {
   atom *atoms;
 } AtomCollection;
 
+
+// Note
+// this callback should create and return an atom
+// using the given operator
+// operands are up to the callbacks discretion
+typedef atom (*MakeAtomCallback)(operator op);
+
 /// FUNCTIONS
 
 // Adds two numbers
@@ -43,5 +50,8 @@ void atom_set_operator(atom*, operator);
 
 // Returns a AtomCollection initialized with sample values
 AtomCollection example_pointerarray();
+
+// Returns the result of the object created by the callback
+int compute_callback(MakeAtomCallback callback);
 
 #endif

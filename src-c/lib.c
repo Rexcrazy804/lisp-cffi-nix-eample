@@ -56,3 +56,8 @@ AtomCollection example_pointerarray() {
 }
 
 void atom_set_operator(atom *obj, operator op) { obj->op = op; }
+
+int compute_callback(MakeAtomCallback callback) {
+  atom my_atom = callback(OP_DIVIDE);
+  return operate_atom(my_atom);
+}
