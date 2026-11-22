@@ -16,6 +16,11 @@ typedef struct {
   operator op;
 } atom;
 
+typedef struct {
+  unsigned long length;
+  atom *atoms;
+} AtomCollection;
+
 /// FUNCTIONS
 
 // Adds two numbers
@@ -35,5 +40,8 @@ atom new_atom(int, int, operator);
 
 // Updates the operator of the atom
 void atom_set_operator(atom*, operator);
+
+// Returns a AtomCollection initialized with sample values
+AtomCollection example_pointerarray();
 
 #endif

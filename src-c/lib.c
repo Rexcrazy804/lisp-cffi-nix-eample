@@ -1,4 +1,5 @@
 #include "lib.h"
+#include <stdlib.h>
 
 int add_two_numbers(int one, int two) { return one + two; }
 
@@ -28,6 +29,27 @@ atom new_atom(int n1, int n2, operator op) {
       .num1 = n1,
       .num2 = n2,
       .op = op,
+  };
+
+  return obj;
+}
+
+AtomCollection example_pointerarray() {
+  AtomCollection obj = {
+    .length = 2,
+    .atoms = malloc(sizeof(atom) * 2)
+  };
+
+  obj.atoms[0] = (atom) {
+    .num1 = 1,
+    .num2 = 3,
+    .op = OP_ADD
+  };
+
+  obj.atoms[1] = (atom) {
+    .num1 = 4,
+    .num2 = 2,
+    .op = OP_DIVIDE
   };
 
   return obj;
