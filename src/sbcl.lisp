@@ -112,3 +112,24 @@
 
 (free-alien (slot *my-atom-collection* 'atoms))
 (free-alien *my-atom-collection*)
+
+(define-alien-type make-atom-callback (* (function (struct c-atom)
+                                                   (enum operator))))
+
+(define-alien-routine ("compute_callback" compute-callback) int
+                      (callback make-atom-callback))
+
+(define-alien-callable create-atom (struct c-atom) ((op (enum operator)))
+  (let ((obj (make-alien (struct c-atom))))
+    (format t "n1:~%")
+    (setf (slot obj 'num1) (parse-integer (read-line)))
+    (format t "n2:~%")
+    (setf (slot obj 'num2) (parse-integer (read-line)))
+    (setf (slot obj 'op) op)
+    (deref obj)))
+
+;; might be the most braindmg ffi interaction I have ever done
+;; so did not passing a system area pointer .w.
+(compute-callback (alien-sap (alien-callable-function 'create-atom)))
+;; double free fucked me over twice
+(free-alien (alien-callable-function 'create-atom))
