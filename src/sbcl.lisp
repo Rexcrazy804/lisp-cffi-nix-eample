@@ -88,3 +88,27 @@
 (operate-atom-ref (alien-sap *my-test*))
 
 (free-alien *my-atom*)
+
+(define-alien-type
+  nil
+  (struct atom-collection
+          (lenght unsigned-long)
+          (atoms (* (struct c-atom)))))
+
+(define-alien-routine "example_pointerarray" (struct atom-collection))
+
+(defparameter *my-atom-collection* (example-pointerarray))
+
+(loop
+  :for x from 0 below (slot *my-atom-collection* 'lenght)
+  :for atom = (deref (slot *my-atom-collection* 'atoms) x)
+  :for num1 = (slot atom 'num1)
+  :for num2 = (slot atom 'num2)
+  :for op = (slot atom 'op)
+  :do
+  (format t "n1 n2 op ~a~%" (list num1 num2 op))
+  (format t "= ~a~%" (operate-atom-ref (alien-sap atom)))
+  (format t "= ~a~%" (operate-atom atom)))
+
+(free-alien (slot *my-atom-collection* 'atoms))
+(free-alien *my-atom-collection*)
