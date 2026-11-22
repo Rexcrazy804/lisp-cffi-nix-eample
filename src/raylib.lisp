@@ -171,10 +171,11 @@
 (define-alien-routine ("DrawCircleV" draw-circle) void
                       (center (struct vector2))
                       (radius float)
+                      (color (struct color)))
 
 (define-alien-routine ("DrawRectangleRec" draw-rectangle) void
                       (rect (struct rectangle))
-                      (color (struct color))))
+                      (color (struct color)))
 
 (define-alien-routine ("ClearBackground" clear-bg) void
                       (color (struct color)))
@@ -236,6 +237,18 @@
      :initform (make-color #xff #x00 #xff)
      :accessor :color)))
 
+;; Rectangle class
+(defclass rectangle ()
+  ((rect
+     :type `(alien (* (struct rectangle)))
+     :initarg :rect)
+   (color
+     :initform (make-color #xff #x00 #xff)
+     :initarg :color
+     :accessor :color))
+  (:documentation "wrapper class for rectangle structure"))
+
+;; Circle impl
 (defmethod draw ((object circle))
   (with-accessors ((center :center)
                    (color :color)
@@ -269,17 +282,8 @@
   (free-alien (:center object))
   (free-alien (:color object)))
 
-;; Rectangle
+;; Rectangle impl
 
-(defclass rectangle ()
-  ((rect
-     :type `(alien (* (struct rectangle)))
-     :initarg :rect)
-   (color
-     :initform (make-color #xff #x00 #xff)
-     :initarg :color
-     :accessor :color))
-  (:documentation "wrapper class for rectangle structure"))
 
 (defmethod draw ((object rectangle))
   (draw-rectangle (deref (slot-value object 'rect))
@@ -299,8 +303,7 @@
     (setf (slot rect 'width) w)
     (if color
         (make-instance 'rectangle :rect rect :color color)  
-        (make-instance 'rectangle :rect rect))
-    ))
+        (make-instance 'rectangle :rect rect))))
 
 ;; Working Area
 (defun main () 
