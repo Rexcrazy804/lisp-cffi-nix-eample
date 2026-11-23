@@ -120,16 +120,13 @@
                       (callback make-atom-callback))
 
 (define-alien-callable create-atom (struct c-atom) ((op (enum operator)))
-  (let ((obj (make-alien (struct c-atom))))
+  (with-alien ((obj (struct c-atom))) ; with alien ensures that we are allocating this on the stack
     (format t "n1:~%")
     (setf (slot obj 'num1) (parse-integer (read-line)))
     (format t "n2:~%")
     (setf (slot obj 'num2) (parse-integer (read-line)))
     (setf (slot obj 'op) op)
-    (deref obj)))
+    obj))
 
-;; might be the most braindmg ffi interaction I have ever done
-;; so did not passing a system area pointer .w.
 (compute-callback (alien-sap (alien-callable-function 'create-atom)))
-;; double free fucked me over twice
 (free-alien (alien-callable-function 'create-atom))
